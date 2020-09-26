@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[53]:
 
 
 import pandas as pd
@@ -14,7 +14,7 @@ import requests
 from datetime import datetime
 
 
-# In[2]:
+# In[54]:
 
 
 df = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
@@ -22,7 +22,7 @@ focus = df.copy().drop(['Lat','Long'], axis=1).set_index(['Country/Region','Prov
 confirm = focus.groupby('Country/Region').sum().reset_index()
 
 
-# In[3]:
+# In[55]:
 
 
 do_not_include = ['Antigua and Barbuda', 'Angola', 'Benin', 'Botswana', 
@@ -41,26 +41,26 @@ do_not_include = ['Antigua and Barbuda', 'Angola', 'Benin', 'Botswana',
                   'Western Sahara', 'Yemen', 'Zambia', 'Zimbabwe']
 
 
-# In[4]:
+# In[56]:
 
 
 focus
 
 
-# In[5]:
+# In[57]:
 
 
 ## replacing 0 total cases with nan
 #confirm.replace(0, np.nan, inplace=True)
 
 
-# In[6]:
+# In[58]:
 
 
 confirm
 
 
-# In[7]:
+# In[59]:
 
 
 # convert "pivoted" data to "long form"
@@ -72,13 +72,13 @@ data = data.rename(columns = {'Country/Region':'country'})
 data['date'] = pd.to_datetime(data['date'], format= '%m/%d/%y')
 
 
-# In[8]:
+# In[60]:
 
 
 data
 
 
-# In[9]:
+# In[61]:
 
 
 # pivot data with countries as columns
@@ -88,13 +88,13 @@ pivot_cases = pd.pivot_table(data, index = "date", columns = "country", values= 
 pivot_cases = pivot_cases.drop(columns=do_not_include)
 
 
-# In[10]:
+# In[62]:
 
 
 pivot_cases
 
 
-# In[11]:
+# In[63]:
 
 
 # new dataframe to store "daily new cases"
@@ -106,27 +106,27 @@ for column in pivot_newcases.columns[0:]:
     pivot_newcases[DailyNewCases] = pivot_newcases[column].diff()
 
 
-# In[12]:
+# In[64]:
 
 
 # fill NaN in pivot_newcases (first row) with values from pivot_cases
 pivot_newcases.fillna(pivot_cases, inplace=True)
 
 
-# In[13]:
+# In[65]:
 
 
 pivot_newcases
 
 
-# In[14]:
+# In[66]:
 
 
 # replace negative daily values by setting 0 as the lowest value
 pivot_newcases = pivot_newcases.clip(lower=0)
 
 
-# In[15]:
+# In[67]:
 
 
 # new dataframe to store "avg new cases"
@@ -138,20 +138,20 @@ for column in pivot_avgnewcases.columns[0:]:
     pivot_avgnewcases[DaySeven] = pivot_avgnewcases[column].rolling(window=7, center=False).mean()
 
 
-# In[16]:
+# In[68]:
 
 
 # fill NaN in pivot_avgnewcases (first 6 rows) with values from pivot_newcases
 pivot_recentnew = pivot_avgnewcases.fillna(pivot_newcases)
 
 
-# In[17]:
+# In[69]:
 
 
 pivot_recentnew
 
 
-# In[18]:
+# In[70]:
 
 
 # new dataframe to store "avg new cases" with centered average
@@ -163,13 +163,13 @@ for column in pivot_avgnewcases_center.columns[0:]:
     pivot_avgnewcases_center[DaySeven] = pivot_avgnewcases_center[column].rolling(window=7, min_periods=4, center=True).mean()
 
 
-# In[19]:
+# In[71]:
 
 
 pivot_avgnewcases_center
 
 
-# In[20]:
+# In[72]:
 
 
 ## new dataframe to store "avg new cases" with centered average
@@ -181,26 +181,26 @@ pivot_avgnewcases_center
 #    pivot_recentnew_peaktodate[DaySeven] = pivot_recentnew_peaktodate[column].cummax()
 
 
-# In[21]:
+# In[73]:
 
 
 #pivot_recentnew_peaktodate
 
 
-# In[22]:
+# In[74]:
 
 
 # new dataframe to store peak 7-day average to date 
 pivot_recentnew_peaktodate = pivot_recentnew.cummax()
 
 
-# In[23]:
+# In[75]:
 
 
 pivot_recentnew_peaktodate
 
 
-# In[24]:
+# In[76]:
 
 
 # reset indexes of "pivoted" data
@@ -211,79 +211,79 @@ pivot_avgnewcases_center = pivot_avgnewcases_center.reset_index()
 pivot_recentnew_peaktodate = pivot_recentnew_peaktodate.reset_index()
 
 
-# In[25]:
+# In[77]:
 
 
 # convert "pivot" of total cases to "long form"
 country_cases = pd.melt(pivot_cases, id_vars=['date'], var_name='country', value_name='cases')
 
 
-# In[26]:
+# In[78]:
 
 
 country_cases
 
 
-# In[27]:
+# In[79]:
 
 
 # convert "pivot" of daily new cases to "long form"
 country_newcases = pd.melt(pivot_newcases, id_vars=['date'], var_name='country', value_name='new_cases')
 
 
-# In[28]:
+# In[80]:
 
 
 country_newcases
 
 
-# In[29]:
+# In[81]:
 
 
 # convert "pivot" of recent new cases to "long form" (7-day avg w first 6 days from "new cases")
 country_recentnew = pd.melt(pivot_recentnew, id_vars=['date'], var_name='country', value_name='recent_new')
 
 
-# In[30]:
+# In[82]:
 
 
 country_recentnew
 
 
-# In[31]:
+# In[83]:
 
 
 # convert "pivot" of centered average new cases to "long form"
 country_avgnewcases_center = pd.melt(pivot_avgnewcases_center, id_vars=['date'], var_name='country', value_name='avg_cases')
 
 
-# In[32]:
+# In[84]:
 
 
 country_avgnewcases_center
 
 
-# In[33]:
+# In[85]:
 
 
 # convert "pivot" of centered average new cases to "long form"
 country_recentnew_peaktodate = pd.melt(pivot_recentnew_peaktodate, id_vars=['date'], var_name='country', value_name='peak_recent_new')
 
 
-# In[34]:
+# In[86]:
 
 
 country_recentnew_peaktodate
 
 
-# In[35]:
+# In[87]:
 
 
 # merge the 5 "long form" dataframes based on index
 country_merge = pd.concat([country_cases, country_newcases, country_avgnewcases_center, country_recentnew, country_recentnew_peaktodate], axis=1)
 
 
-# In[36]:
+# In[88]:
 
 
 # NOTE:
@@ -293,20 +293,20 @@ country_merge = pd.concat([country_cases, country_newcases, country_avgnewcases_
 country_merge['recent_new_int'] = country_merge['recent_new'].astype(int)
 
 
-# In[37]:
+# In[89]:
 
 
 # remove duplicate columns
 country_merge = country_merge.loc[:,~country_merge.columns.duplicated()]
 
 
-# In[38]:
+# In[90]:
 
 
 country_merge
 
 
-# In[39]:
+# In[91]:
 
 
 ## UPDATE 9/25/20 - modified green logic due to quirk caused by original logic on countries page
@@ -332,13 +332,13 @@ def conditions(country_merge):
 country_merge['color_historical'] = country_merge.apply(conditions, axis=1)
 
 
-# In[40]:
+# In[92]:
 
 
 country_merge
 
 
-# In[41]:
+# In[93]:
 
 
 # dataframe with only the most recent date for each country
@@ -346,13 +346,13 @@ country_merge
 country_latest = country_merge.loc[country_merge.groupby('country').date.idxmax().values]
 
 
-# In[42]:
+# In[94]:
 
 
 country_latest
 
 
-# In[43]:
+# In[95]:
 
 
 # dataframe with just country, total cases, and color
@@ -362,33 +362,45 @@ country_total_color = country_latest[['country','cases','color_historical']]
 country_total_color = country_total_color.rename(columns = {'cases':'total_cases', 'color_historical':'color'})
 
 
-# In[44]:
+# In[96]:
 
 
 country_total_color
 
 
-# In[45]:
+# In[97]:
 
 
 # merging total cases onto the merged dataframe
 country_final = country_merge.merge(country_total_color, on='country', how='left')
 
 
-# In[46]:
+# In[98]:
 
 
 ## drop rows where cumulative cases is NaN (dates before reported cases)
 #country_final = country_final.dropna(subset=['cases']) 
 
 
-# In[47]:
+# In[99]:
 
 
 country_final
 
 
-# In[48]:
+# In[100]:
+
+
+#correcting country names
+countryrename = {'Taiwan*' : 'Taiwan',
+                 'Korea, South' : 'South Korea',
+                 'United Arab Emirates' : 'U.A.E.',
+                 'Bosnia and Herzegovina' : 'Bosnia'}
+
+country_final['country'] = country_final['country'].replace(countryrename)
+
+
+# In[101]:
 
 
 ## Remove the 'cases' column to match format of Era's state result file 
@@ -397,7 +409,7 @@ result = country_final[['country','date','new_cases','avg_cases','total_cases','
 result.to_csv('result.csv', index=False)
 
 
-# In[49]:
+# In[102]:
 
 
 # dataframe with just country and color
@@ -407,20 +419,20 @@ country_color = country_total_color[['country','color']]
 country_color.to_csv('CountryColors.csv', index=False)
 
 
-# In[50]:
+# In[103]:
 
 
 # count number of countries by color by date
 color_by_date = pd.crosstab(index = country_final['date'], columns=country_final['color_historical'])
 
 
-# In[51]:
+# In[104]:
 
 
 color_by_date
 
 
-# In[52]:
+# In[105]:
 
 
 color_by_date.to_csv('color_by_date.csv')
